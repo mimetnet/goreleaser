@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -105,6 +107,14 @@ func doRun(ctx *context.Context, cl client.Client) error {
 	content, err := doBuildManifest(data)
 	if err != nil {
 		return err
+	}
+
+	// create the file, similar to brew.go#L164
+	var filename = scoop.Name + "-scoop-manifest.json"
+	var scoopPath = filepath.Join(ctx.Config.Dist, filename)
+	log.WithField("manifest", scoopPath).Info("writing")
+	if err := ioutil.WriteFile(scoopPath, content.Bytes(), 0644); err != nil { //nolint: gosec
+		return fmt.Errorf("failed to write brew formula: %w", err)
 	}
 
 	if ctx.SkipPublish {
